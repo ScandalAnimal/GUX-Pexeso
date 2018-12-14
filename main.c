@@ -62,7 +62,7 @@ void initWindow() {
   	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
   	gtk_container_set_border_width(GTK_CONTAINER(window), 5);
 
-	icon = create_pixbuf("./images/back.png");  
+	icon = create_pixbuf("back.png");  
   	gtk_window_set_icon(GTK_WINDOW(window), icon);
 }
 
@@ -92,9 +92,8 @@ char* getImageName(int position) {
 	char str[12];
 	sprintf(str, "%d", imageNumber);
 	
-	char* res = (char*)malloc(strlen("./images/") + strlen(str) + strlen(".png") + 1);
-	strcpy(res, "./images/");
-	strcat(res, str);
+	char* res = (char*)malloc(strlen(str) + strlen(".png") + 1);
+	strcpy(res, str);
 	strcat(res, ".png");
 	return res;
 
@@ -118,7 +117,7 @@ void shuffleImages() {
 void newGame( GtkWidget *widget, gpointer data) {
 
 	for (int i = 0; i < (BOARD_HEIGHT * BOARD_WIDTH); i++) {
-		image = gtk_image_new_from_file("./images/back.png");
+		image = gtk_image_new_from_file("back.png");
 		gtk_button_set_image (GTK_BUTTON (buttons[i]), image);
 	}
 	int i = 0;
@@ -215,8 +214,8 @@ void turn( GtkWidget *widget, gpointer data) {
 					GtkWidget *image3;
 					GtkWidget *image4;
 
-					image3 = gtk_image_new_from_file("./images/back.png");
-					image4 = gtk_image_new_from_file("./images/back.png");
+					image3 = gtk_image_new_from_file("back.png");
+					image4 = gtk_image_new_from_file("back.png");
 					gtk_button_set_image (GTK_BUTTON (buttons[firstMove]), image3);
 					gtk_button_set_image (GTK_BUTTON (buttons[GPOINTER_TO_INT(data)]), image4);
 					if (onTurn == 1) {
@@ -287,7 +286,7 @@ void initBoard() {
 
     for (i=0; i < BOARD_WIDTH; i++) {
         for (j=0; j < BOARD_HEIGHT; j++) {
-        	image = gtk_image_new_from_file("./images/back.png");
+        	image = gtk_image_new_from_file("back.png");
         	button = gtk_button_new();
         	gtk_button_set_image (GTK_BUTTON (button), image);
         	buttons[pos] = button;
