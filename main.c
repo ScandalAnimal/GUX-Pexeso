@@ -1,6 +1,10 @@
+/*
+ * GUX 2 - Pexeso
+ * Author: maros vasilisin, xvasil02
+ * 14.12.2018
+ */
 #include <gtk/gtk.h>
 
-// #include "pexeso.h"
 #define BOARD_WIDTH 4
 #define BOARD_HEIGHT 6
 
@@ -30,8 +34,6 @@ int turns = 0;
 int firstMove = 0;
 int score1 = 0;
 int score2 = 0;
-
-// GtkWidget *ttt;
 
 GtkWidget* buttons[BOARD_WIDTH * BOARD_HEIGHT];
 int states[BOARD_WIDTH * BOARD_HEIGHT] = {0};
@@ -83,20 +85,6 @@ void initMenu() {
     gtk_box_pack_start(GTK_BOX(vbox), menuBar, FALSE, FALSE, 0);
 
 }
-gboolean timeout_cb (gpointer data) {
-  // Deference the object pointer to do the actual work
-  // Hbafile *hbafile = (Hbafile *)data;
-  // if (hbafile->isStarted ())
-  // {
-    // hbafile->nextFrame ();
-    // return TRUE;
-  // }
-  // else
-  // {
-    // NOTE: Returning "false" here *disables* the GTK+ timer!
-    return TRUE;
-  // }
-}
 
 char* getImageName(int position) {
 
@@ -104,7 +92,6 @@ char* getImageName(int position) {
 	char str[12];
 	sprintf(str, "%d", imageNumber);
 	
-
 	char* res = (char*)malloc(strlen("./images/") + strlen(str) + strlen(".png") + 1);
 	strcpy(res, "./images/");
 	strcat(res, str);
@@ -113,32 +100,94 @@ char* getImageName(int position) {
 
 }
 
+void shuffleImages() {
+	
+	int size = BOARD_HEIGHT * BOARD_WIDTH;
+	if (size > 1) {
+        size_t i;
+        for (i = 0; i < size - 1; i++) {
+          size_t j = i + rand() / (RAND_MAX / (size - i) + 1);
+          int t = images[j];
+          images[j] = images[i];
+          images[i] = t;
+        }
+    }
+}
+
+
+void newGame( GtkWidget *widget, gpointer data) {
+
+	for (int i = 0; i < (BOARD_HEIGHT * BOARD_WIDTH); i++) {
+		image = gtk_image_new_from_file("./images/back.png");
+		gtk_button_set_image (GTK_BUTTON (buttons[i]), image);
+	}
+	int i = 0;
+	char str[12];
+	sprintf(str, "%d", i);
+	gtk_label_set_text(GTK_LABEL(player1Score), str);
+	gtk_label_set_text(GTK_LABEL(player2Score), str);
+	gtk_label_set_text(GTK_LABEL(whoseTurnitIs), "Turn: Player 1");
+	score1 = 0;
+	score2 = 0;
+	for (int i = 0; i < (BOARD_HEIGHT * BOARD_WIDTH); i++) {
+		states[i] = 0;
+	}
+	// shuffleImages();
+ }
+
+void showScore() {
+	
+	GtkWidget *dialog;
+	char str[12];
+	sprintf(str, "%d", score1);
+	
+	char* res = (char*)malloc(strlen("Final score is: ") + strlen(str) + strlen(":") + strlen(str) + strlen(".\nDo you want to play another game?")+ 1);
+	strcpy(res, "Final score is: ");
+	strcat(res, str);
+	sprintf(str, "%d", score2);
+	strcat(res, ":");
+	strcat(res, str);
+	strcat(res, ".\nDo you want to play another game?");
+
+	dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+            GTK_DIALOG_DESTROY_WITH_PARENT,
+            GTK_MESSAGE_QUESTION,
+            GTK_BUTTONS_OK_CANCEL,
+            res);
+
+  	gtk_window_set_title(GTK_WINDOW(dialog), "Final Score");
+  	int result = gtk_dialog_run(GTK_DIALOG(dialog));
+	switch (result) {
+	    case GTK_RESPONSE_OK:
+    	    newGame(dialog, NULL);
+       		break;
+    	default:
+       		gtk_main_quit();
+       		break;
+  	}
+	gtk_widget_destroy(dialog);
+	free(res);
+
+}
+
 void turn( GtkWidget *widget, gpointer data) {
 	char* imageName = getImageName(GPOINTER_TO_INT(data)); 
-	g_print("image name: %s", imageName );
 	GtkWidget *image2 = gtk_image_new_from_file(imageName);
 	gtk_button_set_image (GTK_BUTTON (widget), image2);
 
     turns++;
-
-	GtkWidget *image3;
-	GtkWidget *image4;
-
-    g_print ("Hello again - %d was pressed\n", GPOINTER_TO_INT(data));
+	gtk_widget_show_all(window);
     free(imageName);
 
-    g_print("state: %d\n", states[GPOINTER_TO_INT(data)]);
     if (states[GPOINTER_TO_INT(data)] == 0) { 
 	    if (turns == 1) {
 	    	firstMove = GPOINTER_TO_INT(data);
 	    }
 	    if (turns == 2) {
 
-	    	g_print("indexes: %d %d\n", firstMove, GPOINTER_TO_INT(data));
 	    	if (firstMove != GPOINTER_TO_INT(data)) {
 		    	int a = images[firstMove];
 		    	int b = images[GPOINTER_TO_INT(data)];
-		    	g_print("clicked: %d %d\n", a, b);
 		    	if (a == b) {
 		    		states[firstMove] = 1;
 		    		states[GPOINTER_TO_INT(data)] = 1;
@@ -147,18 +196,27 @@ void turn( GtkWidget *widget, gpointer data) {
 		    			char str[12];
 						sprintf(str, "%d", score1);
 						gtk_label_set_text(GTK_LABEL(player1Score), str);
+						if ((score1 + score2) == (BOARD_WIDTH * BOARD_HEIGHT / 2)) {
+							showScore();
+						}
 					}
 					else {
 		    			score2++;
 		    			char str[12];
 						sprintf(str, "%d", score2);
 						gtk_label_set_text(GTK_LABEL(player2Score), str);
+						if ((score1 + score2) == (BOARD_WIDTH * BOARD_HEIGHT / 2)) {
+							showScore();
+						}
 					}
 
 		    	}
 		    	else {
-		    		image3 = gtk_image_new_from_file("./images/back.png");
-		    		image4 = gtk_image_new_from_file("./images/back.png");
+					GtkWidget *image3;
+					GtkWidget *image4;
+
+					image3 = gtk_image_new_from_file("./images/back.png");
+					image4 = gtk_image_new_from_file("./images/back.png");
 					gtk_button_set_image (GTK_BUTTON (buttons[firstMove]), image3);
 					gtk_button_set_image (GTK_BUTTON (buttons[GPOINTER_TO_INT(data)]), image4);
 					if (onTurn == 1) {
@@ -181,29 +239,6 @@ void turn( GtkWidget *widget, gpointer data) {
 	else {
 		turns -= 1;
 	}
-   //  if (turns == 2) {
-   //  	// skontroluj ci sa obrazky zhodovali
-   //  	turns = 0;
-   //  	for (int i = 0; i < (BOARD_HEIGHT * BOARD_WIDTH); i++) {
-   //  		// kontrola len na tie ktore neboli otocene spravne
-   //  		image3 = gtk_image_new_from_file("./images/back.png");
-			// gtk_button_set_image (GTK_BUTTON (buttons[i]), image3);
-   //  	}
-   //  }
-}
-
-void shuffleImages() {
-	
-	int size = BOARD_HEIGHT * BOARD_WIDTH;
-	if (size > 1) {
-        size_t i;
-        for (i = 0; i < size - 1; i++) {
-          size_t j = i + rand() / (RAND_MAX / (size - i) + 1);
-          int t = images[j];
-          images[j] = images[i];
-          images[i] = t;
-        }
-    }
 }
 
 void createImages() {
@@ -215,11 +250,7 @@ void createImages() {
 		it++; 
 	}
 
-	// zatial nerandomizujeme
 	// shuffleImages();
-	for (int i = 0; i < (BOARD_WIDTH * BOARD_HEIGHT); i++) {
-	    g_print ("%d ", images[i]);
-	}
 }
 
 void initScoreboard() {
@@ -230,9 +261,6 @@ void initScoreboard() {
 	player2Text = gtk_label_new("Player 2 score: ");
 	player1Score = gtk_label_new("0");
 	player2Score = gtk_label_new("0");
-
-
-	// gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
 
   	scoreboard = gtk_hbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(vbox), scoreboard);
@@ -246,9 +274,6 @@ void initScoreboard() {
 }
 
 void initBoard() {
-
-	// ttt = pexeso_new ();
-  	// gtk_container_add (GTK_CONTAINER (vbox), ttt);
 
 	table = gtk_table_new(BOARD_WIDTH, BOARD_HEIGHT, TRUE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -276,27 +301,6 @@ void initBoard() {
   	gtk_container_add(GTK_CONTAINER(vbox), table);
 
 }
-
- void newGame( GtkWidget *widget, gpointer data) {
-
-	for (int i = 0; i < (BOARD_HEIGHT * BOARD_WIDTH); i++) {
-		image = gtk_image_new_from_file("./images/back.png");
-		gtk_button_set_image (GTK_BUTTON (buttons[i]), image);
-	}
-	int i = 0;
-	char str[12];
-	sprintf(str, "%d", i);
-	gtk_label_set_text(GTK_LABEL(player1Score), str);
-	gtk_label_set_text(GTK_LABEL(player2Score), str);
-	gtk_label_set_text(GTK_LABEL(whoseTurnitIs), "Turn: Player 1");
-	score1 = 0;
-	score2 = 0;
-	for (int i = 0; i < (BOARD_HEIGHT * BOARD_WIDTH); i++) {
-		states[i] = 0;
-	}
-	// zatial nerandomizujeme
-	// shuffleImages();
- }
 
 int main(int argc, char *argv[]) {
 
